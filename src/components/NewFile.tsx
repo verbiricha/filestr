@@ -43,13 +43,14 @@ export const FileInput = (props: InputProps) => {
 
 function FilePreview({ file }) {
   const fileType = file.type;
+  const url = URL.createObjectURL(file);
 
   if (fileType.startsWith("image")) {
-    return <img src={URL.createObjectURL(file)} alt={file.name} />;
+    return <img key={file.name} src={url} alt={file.name} />;
   } else if (fileType.startsWith("audio")) {
-    return <audio controls src={URL.createObjectURL(file)} />;
+    return <audio key={file.name} controls src={url} />;
   } else if (fileType.startsWith("video")) {
-    return <video controls src={URL.createObjectURL(file)} />;
+    return <video key={file.name} controls src={url} />;
   } else {
     return <Text>Unsupported file type: {fileType}</Text>;
   }
