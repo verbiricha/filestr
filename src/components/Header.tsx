@@ -23,6 +23,7 @@ export function Header() {
         </Link>
       </Flex>
       <Flex>
+        <Attachment />
         <DarkModeSwitch />
       </Flex>
     </Flex>

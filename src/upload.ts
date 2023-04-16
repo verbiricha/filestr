@@ -31,7 +31,8 @@ export async function VoidCat(
       "V-Filename": filename,
       "V-Full-Digest": hash,
       "V-Description": "Upload from filestr",
-      "V-Strip-Metadata": "true",
+      //todo: fails a lot
+      //"V-Strip-Metadata": "true",
     },
   });
 

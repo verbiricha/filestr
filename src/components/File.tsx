@@ -37,12 +37,10 @@ export function File({ event, relays }) {
       <CardHeader>
         <Flex justifyContent="space-between">
           <Profile pubkey={event.pubkey} relays={relays} />
-          <Text display={["none", "block"]} color="gray.400">
-            {event.content}
-          </Text>
         </Flex>
       </CardHeader>
       <CardBody>
+        <Text>{event.content}</Text>
         <Flex my={2} flexWrap="wrap">
           {hashtags.map((t) => (
             <Tag key={t} size="lg" mr={2} mb={2}>

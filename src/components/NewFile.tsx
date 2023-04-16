@@ -13,6 +13,8 @@ import {
   InputGroup,
   InputRightElement,
   Image,
+  Checkbox,
+  CheckboxGroup,
   Button,
   IconButton,
 } from "@chakra-ui/react";
@@ -83,8 +85,39 @@ function Preview({ file, blurhash }) {
   );
 }
 
+function RelaySelector({ relays, onSelect }) {
+  const [publishOn, setPublishOn] = useState(
+    relays.reduce((acc, url) => {
+      return { [url]: true };
+    }, {})
+  );
+
+  function update(url, checked) {
+    setPublishOn((acc) => {
+      const newState = { ...acc, [url]: checked };
+      onSelect(newState);
+      return newState;
+    });
+  }
+
+  return (
+    <Flex flexDirection="column">
+      {relays.map((url) => (
+        <Checkbox
+          key={url}
+          value={publishOn[url]}
+          onChange={(e) => update(url, e.target.checked)}
+        >
+          {url}
+        </Checkbox>
+      ))}
+    </Flex>
+  );
+}
+
 export const NewFile = ({ onSuccess, onCancel, relays }) => {
   const toast = useToast();
+  const [publishOn, setPublishOn] = useState({});
   const [isUploading, setIsUploading] = useState(false);
   const [name, setName] = useState("");
   const [tags, setTags] = useState("");
@@ -95,6 +128,9 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length !== 0);
+  const publishTo = Object.entries(publishOn)
+    .filter(([url, publish]) => publish)
+    .map(([url]) => url);
 
   const ev = useMemo(() => {
     const { url, file } = upload ?? {};
@@ -162,9 +198,10 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
     const timestamp = { ...ev, created_at: Math.floor(Date.now() / 1000) };
     try {
       const signed = await window.nostr.signEvent(timestamp);
-      pool.publish(signed, relays);
+      pool.publish(signed, publishTo);
       onSuccess();
     } catch (error) {
+      console.error(error);
       toast({
         title: "Couldn't sign event",
         status: "error",
@@ -182,7 +219,7 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="File name"
+        placeholder="Description"
       />
       <Input
         type="text"
@@ -200,10 +237,13 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
       </Button>
       <Heading>Nostr event</Heading>
       <Code>{JSON.stringify(ev, null, 2)}</Code>
+      <RelaySelector relays={relays} onSelect={setPublishOn} />
       <Flex width="100%">
-        <Button onClick={onCancel} mr={2}>
-          Cancel
-        </Button>
+        {onCancel && (
+          <Button onClick={onCancel} mr={2}>
+            Cancel
+          </Button>
+        )}
         <Button
           colorScheme="purple"
           isDisabled={!upload}

@@ -4,7 +4,7 @@ import { utils } from "nostr-tools";
 
 export const pool = new RelayPool();
 
-export function useSub({ filters, relays, options = {} }) {
+export function useSub({ filters, relays, enabled = true, options = {} }) {
   const [events, setEvents] = useState([]);
   const [seenOn, setSeenOn] = useState({});
 
@@ -24,8 +24,17 @@ export function useSub({ filters, relays, options = {} }) {
   function onEose(relayURL, timestamp) {}
 
   useEffect(() => {
-    return pool.subscribe(filters, relays, onEvent, undefined, onEose, options);
-  }, []);
+    if (enabled) {
+      return pool.subscribe(
+        filters,
+        relays,
+        onEvent,
+        undefined,
+        onEose,
+        options
+      );
+    }
+  }, [enabled]);
 
   return { events, seenOn };
 }
