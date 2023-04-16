@@ -20,18 +20,18 @@ const RelaySummary = dynamic(
 
 export function RelayLink({ url, info }) {
   return (
-    <Card>
-      <CardHeader>
-        <Link key={url} href={`/relay/${nip19.nrelayEncode(url)}`}>
+    <Link key={url} href={`/relay/${nip19.nrelayEncode(url)}`}>
+      <Card>
+        <CardHeader>
           <HStack spacing={2}>
             <RelayFavicon url={url} />
             <Text fontSize="lg">{url}</Text>
           </HStack>
-        </Link>
-      </CardHeader>
-      <CardBody>
-        <RelaySummary url={url} />
-      </CardBody>
-    </Card>
+        </CardHeader>
+        <CardBody>
+          <RelaySummary url={url} />
+        </CardBody>
+      </Card>
+    </Link>
   );
 }

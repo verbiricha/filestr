@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { RelayPool } from "nostr-relaypool";
 import { utils } from "nostr-tools";
 
-const pool = new RelayPool();
+export const pool = new RelayPool();
 
 export function useSub({ filters, relays, options = {} }) {
   const [events, setEvents] = useState([]);

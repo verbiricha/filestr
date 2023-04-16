@@ -34,9 +34,9 @@ const Index = ({ relays }) => {
   return (
     <>
       <Head>
-        <title>Nostrrr</title>
-        <meta name="og:title" content="A nostr Relay explorer" />
-        <meta name="og:description" content="Browse nostr relays" />
+        <title>Filestr 🥩</title>
+        <meta name="og:title" content="A nostr File explorer" />
+        <meta name="og:description" content="Browse files in nostr" />
       </Head>
       <Layout>
         <InputGroup>

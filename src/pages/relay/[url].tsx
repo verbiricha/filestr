@@ -1,12 +1,14 @@
 import Head from "next/head";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useState } from "react";
 
-import { Heading } from "@chakra-ui/react";
+import { useToast, Heading, Button } from "@chakra-ui/react";
 
 import { nip19 } from "nostr-tools";
 
 import { Layout } from "../../components/Layout";
+import { NewFile } from "../../components/NewFile";
 import { RelayMetadata } from "../../components/RelayMetadata";
 
 const Feed = dynamic(
@@ -20,6 +22,15 @@ const RelayStats = dynamic(
 );
 
 const Relay = ({ url, nrelay }) => {
+  const toast = useToast();
+  const [showNew, setShowNew] = useState(false);
+  function filePublished() {
+    toast({
+      title: "File published",
+      description: `The file has been published to ${url}`,
+    });
+    setShowNew(false);
+  }
   return (
     <>
       <Head>
@@ -28,8 +39,16 @@ const Relay = ({ url, nrelay }) => {
       </Head>
       <Layout>
         <RelayMetadata url={url} />
-        <Heading fontSize="2xl">Feed</Heading>
-        <Feed kinds={[1, 30023]} relay={url} />
+        {showNew ? (
+          <NewFile
+            relays={[url]}
+            onCancel={() => setShowNew(false)}
+            onSuccess={filePublished}
+          />
+        ) : (
+          <Button onClick={() => setShowNew(true)}>New file</Button>
+        )}
+        <Feed kinds={[1063]} relay={url} />
       </Layout>
     </>
   );

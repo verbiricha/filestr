@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import Link from "next/link";
 
 import {
   Avatar,
   Flex,
   Code,
+  Tag,
   Image,
   Text,
   Card,
@@ -22,6 +22,7 @@ export function File({ event, relays }) {
   const mime =
     event.tags.find((t) => t[0] === "m")?.at(1) ||
     event.tags.find((t) => t[0] === "type")?.at(1);
+  const hashtags = event.tags.filter((t) => t[0] === "t").map((t) => t.at(1));
   const nevent = useMemo(
     () =>
       nip19.neventEncode({
@@ -41,22 +42,27 @@ export function File({ event, relays }) {
           </Text>
         </Flex>
       </CardHeader>
-      <Link href={`https://snort.social/e/${nevent}`}>
-        <CardBody>
-          <Flex alignItems="center" justifyContent="center">
-            {mime.startsWith("video") && <video controls src={url} />}
-            {mime.startsWith("audio") && <audio controls src={url} />}
-            {mime.startsWith("image") && (
-              <Image
-                sx={{ borderRadius: "12px" }}
-                objectFit="cover"
-                src={url}
-                alt={event.content}
-              />
-            )}
-          </Flex>
-        </CardBody>
-      </Link>
+      <CardBody>
+        <Flex my={2} flexWrap="wrap">
+          {hashtags.map((t) => (
+            <Tag key={t} size="lg" mr={2} mb={2}>
+              {t}
+            </Tag>
+          ))}
+        </Flex>
+        <Flex alignItems="center" justifyContent="center">
+          {mime.startsWith("video") && <video controls src={url} />}
+          {mime.startsWith("audio") && <audio controls src={url} />}
+          {mime.startsWith("image") && (
+            <Image
+              sx={{ borderRadius: "12px" }}
+              objectFit="cover"
+              src={url}
+              alt={event.content}
+            />
+          )}
+        </Flex>
+      </CardBody>
     </Card>
   );
 }

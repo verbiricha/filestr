@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Flex, Text, Heading } from "@chakra-ui/react";
 
+import { Attachment } from "./Attachment";
 import { DarkModeSwitch } from "./DarkModeSwitch";
 
 export function Header() {
@@ -17,8 +18,8 @@ export function Header() {
     >
       <Flex flexDirection="column">
         <Link href="/">
-          <Heading>Nostrrr</Heading>
-          <Text color="gray.400">A nostr relay explorer</Text>
+          <Heading>Filestr 🥩</Heading>
+          <Text color="gray.400">A nostr file explorer</Text>
         </Link>
       </Flex>
       <Flex>

@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { useInView } from "react-intersection-observer";
 
+import { RelayStats } from "./RelayStats";
 import { useRelayMetadata } from "../hooks/useRelayMetadata";
 
 const Profile = dynamic(() => import("./Profile").then((mod) => mod.Profile), {
@@ -204,11 +205,9 @@ export function RelaySummaryInfo({ url, info = {} }) {
     <>
       <Flex flexDirection="column">
         <Description info={info} />
-        <Operator info={info} relays={[url]} />
-        <Nips info={info} />
-        <Software info={info} />
         <Countries info={info} />
         <CommunityPreferences info={info} />
+        <RelayStats url={url} />
       </Flex>
     </>
   );
