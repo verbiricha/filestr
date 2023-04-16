@@ -35,7 +35,7 @@ export function Username({ pubkey, relays = [] }) {
     relays,
   });
   return (
-    <Link href={`https://snort.social/p/${nprofile}`}>
+    <Link href={`/p/${nprofile}`}>
       <Text as="span">
         {name}
         {isAddressValid && (

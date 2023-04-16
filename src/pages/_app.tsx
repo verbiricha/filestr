@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppProps } from "next/app";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChakraProvider } from "@chakra-ui/react";
 
 import theme from "../theme";
-import { AppProps } from "next/app";
+import { useNostrPubkey } from "../hooks/useNostrPubkey";
 
 const queryClient = new QueryClient();
 

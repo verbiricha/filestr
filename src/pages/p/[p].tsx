@@ -14,36 +14,34 @@ const Feed = dynamic(
   { ssr: false }
 );
 
-const RelayStats = dynamic(
-  () => import("../../components/RelayStats").then((mod) => mod.RelayStats),
+const NostrProfile = dynamic(
+  () => import("../../components/Profile").then((mod) => mod.Profile),
   { ssr: false }
 );
 
-const Relay = ({ url, nrelay }) => {
+const Profile = ({ pubkey, relays }) => {
   return (
     <>
       <Head>
-        <title>{url}</title>
-        <meta name="og:title" content={url} />
+        <title>{pubkey}</title>
       </Head>
       <Layout>
-        <RelayMetadata url={url} />
-        <Feed kinds={[1063]} relays={[url]} />
+        <NostrProfile pubkey={pubkey} includeBio={true} />
+        <Feed filter={{ kinds: [1063], authors: [pubkey] }} relays={relays} />
       </Layout>
     </>
   );
 };
 
 export async function getServerSideProps(context) {
-  const { url } = context.query;
+  const { p } = context.query;
   try {
-    const decoded = nip19.decode(url);
-    if (decoded.type === "nrelay") {
-      const relay = decoded.data;
+    const decoded = nip19.decode(p);
+    if (decoded.type === "npub" || decoded.type === "nprofile") {
       return {
         props: {
-          url: relay,
-          nrelay: url,
+          pubkey: decoded.data.pubkey,
+          relays: decoded.data.relays,
         },
       };
     }
@@ -63,4 +61,4 @@ export async function getServerSideProps(context) {
   }
 }
 
-export default Relay;
+export default Profile;

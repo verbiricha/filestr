@@ -8,17 +8,18 @@ import { Event } from "./Events";
 
 const PAGE = 20;
 
-function FeedPage({ kinds, until, relay }) {
+function FeedPage({ until, relays, filter }) {
   const [next, setNext] = useState();
+  const filters = [
+    {
+      until,
+      limit: PAGE,
+      ...filter,
+    },
+  ];
   const { events } = useSub({
-    filters: [
-      {
-        kinds,
-        until,
-        limit: PAGE,
-      },
-    ],
-    relays: [relay],
+    filters,
+    relays,
     options: {
       unsubscribeOnEose: true,
     },
@@ -41,32 +42,34 @@ function FeedPage({ kinds, until, relay }) {
     <>
       {events.map((ev, idx) => (
         <>
-          <Event key={ev.id} event={ev} relays={[relay]} />
+          <Event key={ev.id} event={ev} relays={relays} />
           {idx === events.length - 1 && !next && <div ref={ref}></div>}
         </>
       ))}
-      {next && <FeedPage until={next} relay={relay} kinds={kinds} />}
+      {next && <FeedPage filter={filter} until={next} relays={relays} />}
     </>
   );
 }
 
-export function Feed({ kinds, relay }) {
+export function Feed({ filter, relays }) {
   const [now] = useState(Math.floor(Date.now() / 1000));
   const [lastSeen, setLastSeen] = useState(now);
   const [until, setUntil] = useState();
+  const filters = [
+    {
+      since: now,
+      ...filter,
+    },
+    {
+      limit: PAGE,
+      until: now,
+      ...filter,
+    },
+  ];
+
   const { events } = useSub({
-    filters: [
-      {
-        kinds,
-        since: now,
-      },
-      {
-        kinds,
-        limit: PAGE,
-        until: now,
-      },
-    ],
-    relays: [relay],
+    filters,
+    relays,
   });
   const oldest = events[events.length - 1];
   const { ref, inView } = useInView({
@@ -97,11 +100,11 @@ export function Feed({ kinds, relay }) {
       </Button>
       {feedEvents.map((ev, idx) => (
         <Box key={ev.id} mb={4}>
-          <Event event={ev} relays={[relay]} />
+          <Event key={`ev-${ev.id}`} event={ev} relays={relays} />
           {idx === feedEvents.length - 1 && !until && <div ref={ref}></div>}
         </Box>
       ))}
-      {until && <FeedPage until={until} relay={relay} kinds={kinds} />}
+      {until && <FeedPage filter={filter} until={until} relays={relays} />}
     </>
   );
 }

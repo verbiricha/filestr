@@ -40,7 +40,7 @@ export function getZapAmount(zap) {
 export function NoteReactions({ event, relays }) {
   const identifier = findTag(event.tags, "d");
   const filter =
-    event.kind === 1
+    event.kind < 30000
       ? {
           kinds: [7, 9735],
           "#e": [event.id],

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useMemo } from "react";
 
 import {
@@ -10,9 +11,12 @@ import {
   Card,
   CardHeader,
   CardBody,
+  CardFooter,
 } from "@chakra-ui/react";
+import { DownloadIcon } from "@chakra-ui/icons";
 import { nip19 } from "nostr-tools";
 
+import { NoteReactions } from "./NoteReactions";
 import { Profile } from "./Profile";
 
 export function File({ event, relays }) {
@@ -37,18 +41,14 @@ export function File({ event, relays }) {
       <CardHeader>
         <Flex justifyContent="space-between">
           <Profile pubkey={event.pubkey} relays={relays} />
+          <a href={url} download>
+            <DownloadIcon />
+          </a>
         </Flex>
       </CardHeader>
       <CardBody>
         <Text>{event.content}</Text>
-        <Flex my={2} flexWrap="wrap">
-          {hashtags.map((t) => (
-            <Tag key={t} size="lg" mr={2} mb={2}>
-              {t}
-            </Tag>
-          ))}
-        </Flex>
-        <Flex alignItems="center" justifyContent="center">
+        <Flex alignItems="center" justifyContent="center" mt={2}>
           {mime.startsWith("video") && <video controls src={url} />}
           {mime.startsWith("audio") && <audio controls src={url} />}
           {mime.startsWith("image") && (
@@ -60,7 +60,19 @@ export function File({ event, relays }) {
             />
           )}
         </Flex>
+        <Flex my={2} flexWrap="wrap">
+          {hashtags.map((t) => (
+            <Link key={t} href={`/t/${t}`}>
+              <Tag size="lg" mr={2} mb={2}>
+                {t}
+              </Tag>
+            </Link>
+          ))}
+        </Flex>
       </CardBody>
+      <CardFooter>
+        <NoteReactions event={event} relays={relays} />
+      </CardFooter>
     </Card>
   );
 }
