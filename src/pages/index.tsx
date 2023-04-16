@@ -1,12 +1,15 @@
 import { useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useAtom } from "jotai";
 
 import { relaysAtom } from "../state";
-import { useSub } from "../nostr";
 import { Layout } from "../components/Layout";
-import { Feed } from "../components/Feed";
+
+const Feed = dynamic(
+  () => import("../components/Feed").then((mod) => mod.Feed),
+  { ssr: false }
+);
 
 const Index = ({}) => {
   const [relays] = useAtom(relaysAtom);
@@ -15,10 +18,13 @@ const Index = ({}) => {
       <Head>
         <title>Filestr 🥩</title>
         <meta name="og:title" content="A nostr File explorer" />
-        <meta name="og:description" content="Browse files in nostr" />
+        <meta
+          name="og:description"
+          content="Browse and publish files on nostr"
+        />
       </Head>
       <Layout>
-        <Feed filter={{ kinds: [1063] }} relays={relays} />
+        <Feed key="home" filter={{ kinds: [1063] }} relays={relays} />
       </Layout>
     </>
   );

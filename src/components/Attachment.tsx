@@ -1,19 +1,16 @@
-import { useRouter } from "next/router";
+import Link from "next/link";
 
 import { IconButton } from "@chakra-ui/react";
 import { AttachmentIcon } from "@chakra-ui/icons";
 
 export const Attachment = () => {
-  const router = useRouter();
-  function createFile() {
-    router.push("/new");
-  }
   return (
-    <IconButton
-      variant="unstyled"
-      icon={<AttachmentIcon />}
-      aria-label="Create file"
-      onClick={createFile}
-    />
+    <Link href="/new">
+      <IconButton
+        variant="unstyled"
+        icon={<AttachmentIcon />}
+        aria-label="Create file"
+      />
+    </Link>
   );
 };

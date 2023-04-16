@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Link from "next/link";
 
 import { Flex, Text } from "@chakra-ui/react";
 import { nip19, nip05 } from "nostr-tools";
@@ -35,13 +34,11 @@ export function Username({ pubkey, relays = [] }) {
     relays,
   });
   return (
-    <Link href={`/p/${nprofile}`}>
-      <Text as="span">
-        {name}
-        {isAddressValid && (
-          <Text color="gray.500">{formatAddress(profile.nip05)}</Text>
-        )}
-      </Text>
-    </Link>
+    <Text as="span">
+      {name}
+      {isAddressValid && (
+        <Text color="gray.500">{formatAddress(profile.nip05)}</Text>
+      )}
+    </Text>
   );
 }
