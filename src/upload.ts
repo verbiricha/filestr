@@ -1,5 +1,6 @@
 // Yoinked from snort.social codebase
 import * as secp from "@noble/secp256k1";
+import base32Decode from "base32-decode";
 
 interface UploadResult {
   url?: string;
@@ -12,6 +13,103 @@ const FileExtensionRegex = /\.([\w]+)$/i;
 async function fileHash(buf) {
   const digest = await crypto.subtle.digest("SHA-256", buf);
   return secp.utils.bytesToHex(new Uint8Array(digest));
+}
+
+/**
+ * Parse a magnet URI and return an object of keys/values
+ */
+export function magnetURIDecode(uri: string): Magnet | undefined {
+  try {
+    const result: Record<
+      string,
+      string | number | number[] | string[] | undefined
+    > = {
+      raw: uri,
+    };
+
+    // Support 'magnet:' and 'stream-magnet:' uris
+    const data = uri.trim().split("magnet:?")[1];
+
+    const params = data && data.length > 0 ? data.split("&") : [];
+
+    params.forEach((param) => {
+      const split = param.split("=");
+      const key = split[0];
+      const val = decodeURIComponent(split[1]);
+
+      if (!result[key]) {
+        result[key] = [];
+      }
+
+      switch (key) {
+        case "dn": {
+          (result[key] as string[]).push(val.replace(/\+/g, " "));
+          break;
+        }
+        case "kt": {
+          val.split("+").forEach((e) => {
+            (result[key] as string[]).push(e);
+          });
+          break;
+        }
+        case "ix": {
+          (result[key] as number[]).push(Number(val));
+          break;
+        }
+        case "so": {
+          // todo: not implemented yet
+          break;
+        }
+        default: {
+          (result[key] as string[]).push(val);
+          break;
+        }
+      }
+    });
+
+    // Convenience properties for parity with `parse-torrent-file` module
+    let m;
+    if (result.xt) {
+      const xts = Array.isArray(result.xt) ? result.xt : [result.xt];
+      xts.forEach((xt) => {
+        if (typeof xt === "string") {
+          if ((m = xt.match(/^urn:btih:(.{40})/))) {
+            result.infoHash = [m[1].toLowerCase()];
+          } else if ((m = xt.match(/^urn:btih:(.{32})/))) {
+            const decodedStr = base32Decode(m[1], "RFC4648-HEX");
+            result.infoHash = [bytesToHex(new Uint8Array(decodedStr))];
+          } else if ((m = xt.match(/^urn:btmh:1220(.{64})/))) {
+            result.infoHashV2 = [m[1].toLowerCase()];
+          }
+        }
+      });
+    }
+
+    if (result.xs) {
+      const xss = Array.isArray(result.xs) ? result.xs : [result.xs];
+      xss.forEach((xs) => {
+        if (typeof xs === "string" && (m = xs.match(/^urn:btpk:(.{64})/))) {
+          if (!result.publicKey) {
+            result.publicKey = [];
+          }
+          (result.publicKey as string[]).push(m[1].toLowerCase());
+        }
+      });
+    }
+
+    for (const [k, v] of Object.entries(result)) {
+      if (Array.isArray(v)) {
+        if (v.length === 1) {
+          result[k] = v[0];
+        } else if (v.length === 0) {
+          result[k] = undefined;
+        }
+      }
+    }
+    return result;
+  } catch (e) {
+    console.warn("Failed to parse magnet link", e);
+  }
 }
 
 // Void.cat
@@ -37,7 +135,6 @@ export async function VoidCat(
       "V-Filename": filename,
       "V-Full-Digest": hash,
       "V-Description": "Upload from filestr",
-      //todo: fails a lot
       //"V-Strip-Metadata": "true",
     },
   });
@@ -49,17 +146,27 @@ export async function VoidCat(
       if (rsp.file?.metadata?.mimeType === "image/webp") {
         ext = ["", "webp"];
       }
+      const magnetLink = rsp.file?.metadata?.magnetLink;
+      let infoHash;
+      if (magnetLink) {
+        const parsedMagnet = magnetURIDecode(magnetLink);
+        infoHash = parsedMagnet?.infoHash;
+      }
       return {
         url:
           rsp.file?.metadata?.url ??
           `${VoidCatHost}/d/${rsp.file?.id}${ext ? `.${ext[1]}` : ""}`,
         metadata: {
           hash,
-          mimeType: rsp.file?.metadata?.mimeType || file.type,
+          mimeType:
+            rsp.file?.metadata?.mimeType ||
+            file.type ||
+            "application/octet-stream",
           size: file.size,
         },
         torrent: {
-          magnetLink: rsp.file?.metadata?.magnetLink,
+          magnetLink,
+          infoHash,
         },
       };
     } else {
@@ -122,7 +229,7 @@ export async function NostrBuild(file: File | Blob): Promise<UploadResult> {
       url: new URL(data).toString(),
       metadata: {
         hash,
-        mimeType: file.type,
+        mimeType: file.type || "application/octet-stream",
         size: file.size,
       },
     };
@@ -155,7 +262,7 @@ export async function NostrImg(file: File | Blob): Promise<UploadResult> {
         url: new URL(data.imageUrl).toString(),
         metadata: {
           hash,
-          mimeType: file.type,
+          mimeType: file.type || "application/octet-stream",
           size: file.size,
         },
       };

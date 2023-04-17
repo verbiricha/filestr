@@ -157,8 +157,10 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
       event.tags.push(["size", String(metadata.size)]);
     }
     if (torrent?.magnetLink) {
-      // todo: `i` torrent infohash
       event.tags.push(["magnet", torrent.magnetLink]);
+    }
+    if (torrent?.infoHash) {
+      event.tags.push(["i", torrent.infoHash]);
     }
     if (blurhash?.blurhash) {
       event.tags.push(["blurhash", blurhash.blurhash]);
