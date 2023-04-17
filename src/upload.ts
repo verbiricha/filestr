@@ -55,7 +55,7 @@ export async function VoidCat(
           `${VoidCatHost}/d/${rsp.file?.id}${ext ? `.${ext[1]}` : ""}`,
         metadata: {
           hash,
-          mimeType: file.type,
+          mimeType: rsp.file?.metadata?.mimeType || file.type,
           size: file.size,
         },
         torrent: {

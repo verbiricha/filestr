@@ -173,14 +173,16 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
 
   async function onFileChange(e) {
     const file = e.target.files[0];
-    setFile(file);
-    try {
-      const blurhash = await getBlurhashFromFile(file);
-      setBlurhash(blurhash);
-    } catch (error) {
-      console.error("Couldn't get blurhash");
+    if (file) {
+      setFile(file);
+      try {
+        const blurhash = await getBlurhashFromFile(file);
+        setBlurhash(blurhash);
+      } catch (error) {
+        console.error("Couldn't get blurhash");
+      }
+      setName(file.name);
     }
-    setName(file.name);
   }
   async function uploadFile() {
     try {

@@ -1,5 +1,10 @@
+import React, { useRef, useMemo } from "react";
+
+import { Canvas, useLoader } from "react-three-fiber";
+import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
+import { OrbitControls } from "@react-three/drei";
+
 import Link from "next/link";
-import { useMemo } from "react";
 
 import {
   Avatar,
@@ -7,21 +12,64 @@ import {
   Heading,
   Code,
   Tag,
-  Image,
+  Image as BaseImage,
   Text,
   Card,
   CardHeader,
   CardBody,
   CardFooter,
 } from "@chakra-ui/react";
-import { DownloadIcon } from "@chakra-ui/icons";
+import { LinkIcon } from "@chakra-ui/icons";
 import { nip19 } from "nostr-tools";
 
 import { InputCopy } from "./InputCopy";
 import { NoteReactions } from "./NoteReactions";
 import { Profile } from "./Profile";
 
+function Image({ blurhash, url, alt }) {
+  return <BaseImage objectFit="cover" src={url} alt={alt} />;
+}
+
+function Video({ url }) {
+  return <video key={url} controls src={url} />;
+}
+
+function Audio({ url }) {
+  return <audio key={url} controls src={url} />;
+}
+
+function STLMesh({ url }) {
+  const geometry = useLoader(STLLoader, url);
+  return (
+    <mesh geometry={geometry}>
+      <meshPhongMaterial color="purple" />
+    </mesh>
+  );
+}
+
+function STLViewer({ url }) {
+  return (
+    <Flex sx={{ position: "relative" }} width="100%">
+      <Canvas
+        style={{ height: "320px" }}
+        camera={{ position: [250, 250, 20], fov: 20 }}
+      >
+        <STLMesh url={url} />
+        <OrbitControls panSpeed={0.5} rotateSpeed={0.4} />
+        <ambientLight intensity={0.3} />
+        <pointLight position={[10, 10, 10]} />
+        <directionalLight
+          intensity={0.5}
+          position={[-10, 10, 5]}
+          color="white"
+        />
+      </Canvas>
+    </Flex>
+  );
+}
+
 export function File({ event, relays }) {
+  const blurhash = event.tags.find((t) => t[0] === "blurhash")?.at(1);
   const url =
     event.tags.find((t) => t[0] === "url")?.at(1) ||
     event.tags.find((t) => t[0] === "u")?.at(1);
@@ -43,27 +91,21 @@ export function File({ event, relays }) {
       <CardHeader>
         <Flex justifyContent="space-between">
           <Profile pubkey={event.pubkey} relays={relays} />
-          <a href={url} download>
-            <DownloadIcon />
-          </a>
+          <Link key={event.id} href={`/e/${nevent}`}>
+            <LinkIcon />
+          </Link>
         </Flex>
       </CardHeader>
       <CardBody>
-        <Link key={event.id} href={`/e/${nevent}`}>
-          <Text>{event.content}</Text>
-          <Flex alignItems="center" justifyContent="center" mt={2}>
-            {mime.startsWith("video") && <video controls src={url} />}
-            {mime.startsWith("audio") && <audio controls src={url} />}
-            {mime.startsWith("image") && (
-              <Image
-                sx={{ borderRadius: "12px" }}
-                objectFit="cover"
-                src={url}
-                alt={event.content}
-              />
-            )}
-          </Flex>
-        </Link>
+        <Text>{event.content}</Text>
+        <Flex mt={2}>
+          {mime.startsWith("video") && <Video url={url} />}
+          {mime.startsWith("audio") && <Audio url={url} />}
+          {mime.endsWith("stl") && <STLViewer url={url} />}
+          {mime.startsWith("image") && (
+            <Image blurhash={blurhash} url={url} alt={event.content} />
+          )}
+        </Flex>
         <Flex my={2} flexWrap="wrap">
           {hashtags.map((t) => (
             <Link key={t} href={`/t/${t}`}>
