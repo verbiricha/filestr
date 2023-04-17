@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   Avatar,
   Flex,
+  Heading,
   Code,
   Tag,
   Image,
@@ -16,6 +17,7 @@ import {
 import { DownloadIcon } from "@chakra-ui/icons";
 import { nip19 } from "nostr-tools";
 
+import { InputCopy } from "./InputCopy";
 import { NoteReactions } from "./NoteReactions";
 import { Profile } from "./Profile";
 
@@ -70,6 +72,18 @@ export function File({ event, relays }) {
               </Tag>
             </Link>
           ))}
+        </Flex>
+        <Flex flexDirection="column">
+          <Heading fontSize="md" my={2}>
+            File URL
+          </Heading>
+          <InputCopy text={url} />
+        </Flex>
+        <Flex flexDirection="column">
+          <Heading fontSize="md" my={2}>
+            Nostr id
+          </Heading>
+          <InputCopy text={nevent} />
         </Flex>
       </CardBody>
       <CardFooter>
