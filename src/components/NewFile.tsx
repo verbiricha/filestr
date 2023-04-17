@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
 import {
@@ -17,6 +18,7 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { AttachmentIcon, ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { nip19 } from "nostr-tools";
 
 import { VoidCat } from "../upload";
 import { pool } from "../nostr";
@@ -46,11 +48,11 @@ function FilePreview({ file }) {
   const url = URL.createObjectURL(file);
 
   if (fileType.startsWith("image")) {
-    return <img key={file.name} src={url} alt={file.name} />;
+    return <img src={url} alt={file.name} />;
   } else if (fileType.startsWith("audio")) {
-    return <audio key={file.name} controls src={url} />;
+    return <audio controls src={url} />;
   } else if (fileType.startsWith("video")) {
-    return <video key={file.name} controls src={url} />;
+    return <video controls src={url} />;
   } else {
     return <Text>Unsupported file type: {fileType}</Text>;
   }
@@ -70,7 +72,7 @@ function Preview({ file, blurhash }) {
           />
         )}
       </Flex>
-      {file && !blur && <FilePreview file={file} />}
+      {file && !blur && <FilePreview key={file?.name} file={file} />}
       {blurhash?.blurhash && blur && (
         <BlurhashImage
           blurhash={blurhash.blurhash}
@@ -114,6 +116,7 @@ function RelaySelector({ relays, onSelect }) {
 }
 
 export const NewFile = ({ onSuccess, onCancel, relays }) => {
+  const router = useRouter();
   const toast = useToast();
   const [publishOn, setPublishOn] = useState({});
   const [isUploading, setIsUploading] = useState(false);
@@ -198,6 +201,12 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
       const signed = await window.nostr.signEvent(timestamp);
       pool.publish(signed, publishTo);
       onSuccess();
+      const nevent = nip19.neventEncode({
+        id: signed.id,
+        relays: publishTo,
+        author: signed.pubkey,
+      });
+      router.push(`/e/${nevent}`);
     } catch (error) {
       console.error(error);
       toast({

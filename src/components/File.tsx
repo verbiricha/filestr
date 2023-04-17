@@ -47,19 +47,21 @@ export function File({ event, relays }) {
         </Flex>
       </CardHeader>
       <CardBody>
-        <Text>{event.content}</Text>
-        <Flex alignItems="center" justifyContent="center" mt={2}>
-          {mime.startsWith("video") && <video controls src={url} />}
-          {mime.startsWith("audio") && <audio controls src={url} />}
-          {mime.startsWith("image") && (
-            <Image
-              sx={{ borderRadius: "12px" }}
-              objectFit="cover"
-              src={url}
-              alt={event.content}
-            />
-          )}
-        </Flex>
+        <Link key={event.id} href={`/e/${nevent}`}>
+          <Text>{event.content}</Text>
+          <Flex alignItems="center" justifyContent="center" mt={2}>
+            {mime.startsWith("video") && <video controls src={url} />}
+            {mime.startsWith("audio") && <audio controls src={url} />}
+            {mime.startsWith("image") && (
+              <Image
+                sx={{ borderRadius: "12px" }}
+                objectFit="cover"
+                src={url}
+                alt={event.content}
+              />
+            )}
+          </Flex>
+        </Link>
         <Flex my={2} flexWrap="wrap">
           {hashtags.map((t) => (
             <Link key={t} href={`/t/${t}`}>
