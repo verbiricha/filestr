@@ -7,6 +7,7 @@ import {
   Flex,
   Heading,
   Text,
+  Select,
   Code,
   Input,
   InputGroup,
@@ -20,7 +21,7 @@ import {
 import { AttachmentIcon, ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { nip19 } from "nostr-tools";
 
-import { VoidCat } from "../upload";
+import { VoidCat, NostrBuild, NostrImg } from "../upload";
 import { pool } from "../nostr";
 import { getBlurhashFromFile, BlurhashImage } from "../blur";
 
@@ -115,9 +116,16 @@ function RelaySelector({ relays, onSelect }) {
   );
 }
 
+const UPLOAD_PROVIDERS = {
+  "void.cat": VoidCat,
+  "nostr.build": NostrBuild,
+  "nostrimg.com": NostrImg,
+};
+
 export const NewFile = ({ onSuccess, onCancel, relays }) => {
   const router = useRouter();
   const toast = useToast();
+  const [provider, setProvider] = useState("void.cat");
   const [publishOn, setPublishOn] = useState({});
   const [isUploading, setIsUploading] = useState(false);
   const [name, setName] = useState("");
@@ -134,8 +142,7 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
     .map(([url]) => url);
 
   const ev = useMemo(() => {
-    const { url, file } = upload ?? {};
-    const { metadata } = file ?? {};
+    const { url, metadata, torrent } = upload ?? {};
     const event = {
       kind: 1063,
       content: name,
@@ -146,12 +153,12 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
     }
     if (metadata) {
       event.tags.push(["m", metadata.mimeType]);
-      event.tags.push(["x", metadata.digest]);
+      event.tags.push(["x", metadata.hash]);
       event.tags.push(["size", String(metadata.size)]);
     }
-    if (metadata?.magnetLink) {
+    if (torrent?.magnetLink) {
       // todo: `i` torrent infohash
-      event.tags.push(["magnet", metadata.magnetLink]);
+      event.tags.push(["magnet", torrent.magnetLink]);
     }
     if (blurhash?.blurhash) {
       event.tags.push(["blurhash", blurhash.blurhash]);
@@ -178,7 +185,7 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
   async function uploadFile() {
     try {
       setIsUploading(true);
-      const upload = await VoidCat(file, name);
+      const upload = await UPLOAD_PROVIDERS[provider](file, name);
       if (upload.error) {
         toast({
           title: "Error uploading file",
@@ -235,13 +242,31 @@ export const NewFile = ({ onSuccess, onCancel, relays }) => {
         placeholder="A list of tags: illustration, coffee"
       />
       <Preview file={file} blurhash={blurhash} />
-      <Button
-        isDisabled={!file || isUploading}
-        isLoading={isUploading}
-        onClick={uploadFile}
-      >
-        Upload to void.cat
-      </Button>
+      <Flex justifyContent="space-between">
+        <Button
+          mr={2}
+          colorScheme="purple"
+          isDisabled={!file || isUploading}
+          isLoading={isUploading}
+          onClick={uploadFile}
+          size="lg"
+        >
+          Upload
+        </Button>
+        <Flex alignItems="center">
+          <Text mr={2}>File host</Text>
+          <Select
+            maxWidth="120px"
+            onChange={(e) => setProvider(e.target.value)}
+          >
+            {Object.keys(UPLOAD_PROVIDERS).map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </Select>
+        </Flex>
+      </Flex>
       <Heading>Nostr event</Heading>
       <Code>{JSON.stringify(ev, null, 2)}</Code>
       <RelaySelector relays={relays} onSelect={setPublishOn} />

@@ -9,6 +9,13 @@ interface UploadResult {
 const VoidCatHost = "https://void.cat";
 const FileExtensionRegex = /\.([\w]+)$/i;
 
+async function fileHash(buf) {
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return secp.utils.bytesToHex(new Uint8Array(digest));
+}
+
+// Void.cat
+
 /**
  * Upload file to void.cat
  * https://void.cat/swagger/index.html
@@ -18,8 +25,7 @@ export async function VoidCat(
   filename: string
 ): Promise<UploadResult> {
   const buf = await file.arrayBuffer();
-  const digest = await crypto.subtle.digest("SHA-256", buf);
-  const hash = secp.utils.bytesToHex(new Uint8Array(digest));
+  const hash = await fileHash(buf);
 
   const req = await fetch(`${VoidCatHost}/upload`, {
     mode: "cors",
@@ -47,7 +53,14 @@ export async function VoidCat(
         url:
           rsp.file?.metadata?.url ??
           `${VoidCatHost}/d/${rsp.file?.id}${ext ? `.${ext[1]}` : ""}`,
-        ...rsp,
+        metadata: {
+          hash,
+          mimeType: file.type,
+          size: file.size,
+        },
+        torrent: {
+          magnetLink: rsp.file?.metadata?.magnetLink,
+        },
       };
     } else {
       return {
@@ -85,3 +98,86 @@ export type VoidFileMeta = {
   storage?: string;
   encryptionParams?: string;
 };
+
+// Nostr.build
+
+export async function NostrBuild(file: File | Blob): Promise<UploadResult> {
+  const buf = await file.arrayBuffer();
+  const hash = await fileHash(buf);
+
+  const fd = new FormData();
+  fd.append("fileToUpload", file);
+  fd.append("submit", "Upload Image");
+
+  const rsp = await fetch("https://nostr.build/api/upload/snort.php", {
+    body: fd,
+    method: "POST",
+    headers: {
+      accept: "application/json",
+    },
+  });
+  if (rsp.ok) {
+    const data = await rsp.json();
+    return {
+      url: new URL(data).toString(),
+      metadata: {
+        hash,
+        mimeType: file.type,
+        size: file.size,
+      },
+    };
+  }
+  return {
+    error: "Upload failed",
+  };
+}
+
+// Nostr.img
+
+export async function NostrImg(file: File | Blob): Promise<UploadResult> {
+  const buf = await file.arrayBuffer();
+  const hash = await fileHash(buf);
+
+  const fd = new FormData();
+  fd.append("image", file);
+
+  const rsp = await fetch("https://nostrimg.com/api/upload", {
+    body: fd,
+    method: "POST",
+    headers: {
+      accept: "application/json",
+    },
+  });
+  if (rsp.ok) {
+    const data: UploadResponse = await rsp.json();
+    if (typeof data?.imageUrl === "string" && data.success) {
+      return {
+        url: new URL(data.imageUrl).toString(),
+        metadata: {
+          hash,
+          mimeType: file.type,
+          size: file.size,
+        },
+      };
+    }
+  }
+  return {
+    error: "Upload failed",
+  };
+}
+
+interface UploadResponse {
+  fileID?: string;
+  fileName?: string;
+  imageUrl?: string;
+  lightningDestination?: string;
+  lightningPaymentLink?: string;
+  message?: string;
+  route?: string;
+  status: number;
+  success: boolean;
+  url?: string;
+  data?: {
+    url?: string;
+  };
+}
