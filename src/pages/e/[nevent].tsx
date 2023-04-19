@@ -17,7 +17,7 @@ const Nevent = ({ id, pubkey, relays }) => {
         <title>{pubkey}</title>
       </Head>
       <Layout>
-        <NostrEvent id={id} pubkey={pubkey} relays={relays} />
+        <NostrEvent id={id} pubkey={pubkey} relays={relays} isDetail={true} />
       </Layout>
     </>
   );

@@ -7,7 +7,6 @@ import { Heading, Button } from "@chakra-ui/react";
 import { nip19 } from "nostr-tools";
 
 import { Layout } from "../../components/Layout";
-import { RelayMetadata } from "../../components/RelayMetadata";
 
 const Feed = dynamic(
   () => import("../../components/Feed").then((mod) => mod.Feed),

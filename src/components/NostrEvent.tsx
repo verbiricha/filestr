@@ -20,10 +20,10 @@ export function useNostrEvent({ id, pubkey, relays }) {
   return events[0];
 }
 
-export function NostrEvent({ id, pubkey, relays }) {
+export function NostrEvent({ id, pubkey, relays, ...rest }) {
   const ev = useNostrEvent({ id, pubkey, relays });
   return ev ? (
-    <Event event={ev} relays={relays} />
+    <Event event={ev} relays={relays} {...rest} />
   ) : (
     <Text>Fetching event</Text>
   );

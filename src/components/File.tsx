@@ -19,11 +19,10 @@ import {
   CardBody,
   CardFooter,
 } from "@chakra-ui/react";
-import { LinkIcon } from "@chakra-ui/icons";
+import { DownloadIcon, LinkIcon } from "@chakra-ui/icons";
 import { nip19 } from "nostr-tools";
 
 import { InputCopy } from "./InputCopy";
-import { NoteReactions } from "./NoteReactions";
 import { Profile } from "./Profile";
 
 function Image({ blurhash, url, alt }) {
@@ -68,15 +67,17 @@ function STLViewer({ url }) {
   );
 }
 
-export function File({ event, relays }) {
+export function File({ event, relays, isDetail }) {
   const blurhash = event.tags.find((t) => t[0] === "blurhash")?.at(1);
   const url =
     event.tags.find((t) => t[0] === "url")?.at(1) ||
     event.tags.find((t) => t[0] === "u")?.at(1);
+  const magnet = event.tags.find((t) => t[0] === "magnet")?.at(1);
   const mime =
     event.tags.find((t) => t[0] === "m")?.at(1) ||
     event.tags.find((t) => t[0] === "type")?.at(1);
   const hashtags = event.tags.filter((t) => t[0] === "t").map((t) => t.at(1));
+  const isImage = mime.startsWith("image");
   const nevent = useMemo(
     () =>
       nip19.neventEncode({
@@ -91,29 +92,42 @@ export function File({ event, relays }) {
       <CardHeader>
         <Flex justifyContent="space-between">
           <Profile pubkey={event.pubkey} relays={relays} />
-          <Link key={event.id} href={`/e/${nevent}`}>
-            <LinkIcon />
-          </Link>
+          {isDetail ? (
+            <Link key={event.id} href={url}>
+              <DownloadIcon />
+            </Link>
+          ) : (
+            <Link key={event.id} href={`/e/${nevent}`}>
+              <LinkIcon />
+            </Link>
+          )}
         </Flex>
       </CardHeader>
       <CardBody>
         <Text>{event.content}</Text>
-        <Flex mt={2}>
+        <Flex mt={2} sx={{ position: "relative" }} flexDirection="column">
           {mime.startsWith("video") && <Video url={url} />}
           {mime.startsWith("audio") && <Audio url={url} />}
           {mime.endsWith("stl") && <STLViewer url={url} />}
           {mime.startsWith("image") && (
             <Image blurhash={blurhash} url={url} alt={event.content} />
           )}
-        </Flex>
-        <Flex my={2} flexWrap="wrap">
-          {hashtags.map((t) => (
-            <Link key={t} href={`/t/${t}`}>
-              <Tag size="lg" mr={2} mb={2}>
-                {t}
+          <Flex
+            flexWrap="wrap"
+            sx={isImage ? { position: "absolute", top: 1, right: 1 } : {}}
+          >
+            {hashtags.map((t) => (
+              <Tag
+                key={t}
+                variant="solid"
+                size="lg"
+                colorScheme="purple"
+                mr={2}
+              >
+                <Link href={`/t/${t}`}>{t}</Link>
               </Tag>
-            </Link>
-          ))}
+            ))}
+          </Flex>
         </Flex>
         <Flex flexDirection="column">
           <Heading fontSize="md" my={2}>
@@ -121,6 +135,14 @@ export function File({ event, relays }) {
           </Heading>
           <InputCopy text={url} />
         </Flex>
+        {magnet && (
+          <Flex flexDirection="column">
+            <Heading fontSize="md" my={2}>
+              Magnet
+            </Heading>
+            <InputCopy text={magnet} />
+          </Flex>
+        )}
         <Flex flexDirection="column">
           <Heading fontSize="md" my={2}>
             Nostr id
@@ -128,9 +150,6 @@ export function File({ event, relays }) {
           <InputCopy text={nevent} />
         </Flex>
       </CardBody>
-      <CardFooter>
-        <NoteReactions event={event} relays={relays} />
-      </CardFooter>
     </Card>
   );
 }
