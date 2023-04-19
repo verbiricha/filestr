@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
 
 import { Canvas, useLoader } from "react-three-fiber";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import {
   Avatar,
   Flex,
+  Box,
   Heading,
   Code,
   Tag,
@@ -22,11 +23,48 @@ import {
 import { DownloadIcon, LinkIcon } from "@chakra-ui/icons";
 import { nip19 } from "nostr-tools";
 
+import { BlurhashImage } from "../blur";
 import { InputCopy } from "./InputCopy";
 import { Profile } from "./Profile";
 
-function Image({ blurhash, url, alt }) {
-  return <BaseImage objectFit="cover" src={url} alt={alt} />;
+function ImageFile({ blurhash, url, alt }) {
+  const [{ width, height }, setImageDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      setImageDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+  }, []);
+  const [showFull, setShowFull] = useState(!blurhash);
+
+  return (
+    <>
+      {blurhash && !showFull && width > 0 && height > 0 && (
+        <BlurhashImage
+          onClick={() => setShowFull(true)}
+          style={{ cursor: "pointer" }}
+          blurhash={blurhash}
+          width={width}
+          height={height}
+          alt={alt}
+        />
+      )}
+      <BaseImage
+        sx={{ display: showFull ? "auto" : "none" }}
+        objectFit="cover"
+        src={url}
+        alt={alt}
+      />
+    </>
+  );
 }
 
 function Video({ url }) {
@@ -110,7 +148,7 @@ export function File({ event, relays, isDetail }) {
           {mime.startsWith("audio") && <Audio url={url} />}
           {mime.endsWith("stl") && <STLViewer url={url} />}
           {mime.startsWith("image") && (
-            <Image blurhash={blurhash} url={url} alt={event.content} />
+            <ImageFile blurhash={blurhash} url={url} alt={event.content} />
           )}
           <Flex
             flexWrap="wrap"

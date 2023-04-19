@@ -46,7 +46,7 @@ export async function getBlurhashFromFile(file) {
   };
 }
 
-export function BlurhashImage({ blurhash, width, height, alt }) {
+export function BlurhashImage({ blurhash, width, height, alt, ...props }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -61,5 +61,13 @@ export function BlurhashImage({ blurhash, width, height, alt }) {
     }
   }, [blurhash, width, height]);
 
-  return <canvas ref={canvasRef} width={width} height={height} alt={alt} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      alt={alt}
+      {...props}
+    />
+  );
 }
